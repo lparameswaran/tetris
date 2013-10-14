@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>Game</title>
+    <link rel="stylesheet" type="text/css" href="gamestyle.css"></link>
+  </head>
+  <body onload="startHelp()">
+     <script>
+        var originalOrientation = window.orientation;
+        function setOriginalOrientation() {
+            originalOrientation = window.orientation;
+            initializeHelp();
+        }
+     </script>
+     <div style="position: relative;">
+        <div id="toolbar" style="position: relative;">
+           <button id="newgame" ontouchend="newGameAction()">New Game</button>
+           <button id="abort">Abort</button>
+           <span id="scorearea" sytle="align: right">
+              <span id="scoretext">Score:</span>
+              <span id="score">0</span>
+           </span>
+        </div>
+        <div id="debug"></div>
+        <div id="warn"></div>
+        <div id="error"></div>
+        <div id="gamearea" style="position: relative;">
+           <canvas id="grid" style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
+           <canvas id="credits" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+           <canvas id="foreground" style="position: absolute; left: 0; top: 0; z-index: 2;"></canvas>
+        </div>
+     </div>
+     <audio id="tick" muted="true" preload="auto" autobuffer>
+        <source src="tick.wav" type="audio/wav" />
+        <source src="tick.ogg" type="audio/ogg" />
+        <source src="tick.mp3" type="audio/mpeg" />
+        <source src="tick.aac" type="audio/mp4" />
+        Browser does not support the audio element.
+     </audio>
+     <audio id="swoosh" muted="true" preload="auto" autobuffer>
+        <source src="swoosh.ogg" type="audio/ogg" />
+        <source src="swoosh.mp3" type="audio/mpeg" />
+        <source src="swoosh.wav" type="audio/wav" />
+        <source src="swoosh.aac" type="audio/mp4" />
+        Browser does not support the audio element.
+     </audio>
+     <script src="log.js"></script>
+     <script>
+         function pauseGame() { 
+            if (window.orientation != originalOrientation) {
+               debugoutput("Game Paused -- New=" + window.orientation + " Old=" + originalOrientation);
+               //tetrisGamePause();
+            }
+            else {
+               debugoutput("Resume game");
+               //alert("Resume game");
+               //tetrisGameResume();
+            }
+         }
+
+         function newGameAction(e) {
+            if (!e) {
+               e = window.event;
+            }
+            startNewGame();
+            debugoutput("startNewGame()");
+            animate();
+         }
+         function abortAction(e) {
+            if (!e) {
+               e = window.event;
+            }
+            debugoutput("abort");
+            cancelAllAnimations();
+            stopPlayingSounds();
+            window.location.href = "main.html";
+         }
+      </script>
+      <script src="colors.js"></script>
+      <script src="canvas.js"></script>
+      <script src="shapes.js"></script>
+      <script src="visibleShapes.js"></script>
+      <script src="landing.js"></script>
+      <script src="score.js"></script>
+      <script src="sound.js"></script>
+      <script src="moves.js"></script>
+      <script src="animation.js"></script>
+      <script src="events.js"></script>
+      <script src="main.js"></script>
+      <script>
+         window.addEventListener('onorientationchange', pauseGame, false);
+         window.addEventListener('resize', pauseGame, false);
+         var newgame = document.getElementById("newgame");
+         var mainscreen = document.getElementById("abort");
+         newgame.addEventListener('onclick', newGameAction, false);
+         mainscreen.addEventListener('touchend', abortAction, false);
+
+      </script>
+  </body>
+</html>
+

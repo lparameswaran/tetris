@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="mainstyle.css" />
+    <link rel="apple-touch-icon-precomposed" sizes="57x57" href="apple-touch-icon-57.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="apple-touch-icon-72.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="apple-touch-icon-114.png" />
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="apple-touch-icon-144.png" />
+    <title>Main Page</title>
+  </head>
+  <body onload="initialize()">
+     <h2>Settings</h2>
+     <script>
+        var localStorageSupported = false;
+        var playerName = "";
+        function initialize() {
+            if (window.localStorage) {
+               localStorageSupported = true; 
+               if (getHighScoreValues()) {
+                  document.getElementById("highscores").style.display = "inline";
+               }
+            }
+        }
+     </script>
+     <div id="warn"></div>
+     <div id="debug"></div>
+     <div id="error"></div>
+     <div class="selections">
+          <span id="playerName">Enter Your Name: <input id="player" type="text"/></span>
+          <button id="newgame" onclick="newGameAction()">New Game</button>
+          <button id="highscores" style="display:none" onclick="highScoresAction()">High Scores</button>
+          <button id="quit" onclick="quitAction()">Quit</button>
+     </div>
+     <script src="js/log.js"></script>
+     <script src="js/storage.js"></script>
+     <script>
+         function newGameAction(e) {
+            window.location.href = "game.html?name=" + document.getElementById("player").value;
+         }
+         function highScoresAction(e) {
+            window.location.href = "scores.html?name=" + document.getElementById("player").value;
+         }
+         function quitAction(e) {
+            warnoutput("quit");
+            // Mostly works...
+            window.open('','_self').close();
+            // Try #2 if above fails
+            window.close();
+         }
+         if (location.href.indexOf("name=") >= 0) {
+            playerName = location.href.substring(location.href.indexOf("name=") + 5);
+            document.getElementById("player").value = playerName;
+         }
+      </script>
+  </body>
+</html>
+

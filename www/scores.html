@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <link rel="stylesheet" type="text/css" href="scoresstyle.css" />
+    <title>Scores Page</title>
+  </head>
+  <body>
+     <h2>High Scores</h2>
+     <script>
+        var localStorageSupported = false;
+        var playerName = "";
+     </script>
+     <div id="warn"></div>
+     <div id="debug"></div>
+     <div id="error"></div>
+     <script src="js/log.js"></script>
+     <script src="js/storage.js"></script>
+     <table>
+        <thead>
+            <tr>
+                <th>Rank #</th>
+                <th>Name</th>
+                <th>Score</th>
+                <th>Time in seconds</th>
+            </tr>
+        </thead>
+        <tbody>
+     <script>
+         function goBack() {
+             window.location.href = "main.html?name=" + playerName;
+         }
+         var playerName = "";
+         getHighScoreValues();
+         if (location.href.indexOf("name=") >= 0) {
+            playerName = location.href.substring(location.href.indexOf("name=") + 5);
+         }
+         for (var index = 0; index < storedScores.length; index ++) {
+             document.write("<tr>" +
+                            "<td>" + (index + 1) + "</td>" + 
+                            "<td>" + getNamePortion(storedScores[index]) + "</td>" +
+                            "<td>" + getScorePortion(storedScores[index]) + "</td>" +
+                            "<td>" + getTimePortion(storedScores[index]) + "</td>" +
+                            "</tr>");
+         }
+      </script>
+         </tbody>
+      </table>
+      <button id="goback" onclick="goBack()">Back To Main Menu</button>
+  </body>
+</html>
+

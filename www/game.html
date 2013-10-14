@@ -1,0 +1,223 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>Game</title>
+    <link rel="stylesheet" type="text/css" href="gamestyle.css"></link>
+  </head>
+  <body>
+     <div style="position: relative;">
+        <div id="toolbar" style="position: relative;">
+
+           <!-- This secion used only for destop browsers !-->
+              <button id="rotateleft" style="display:none" onclick="rotateLeft()">Rotate Left</button>
+              <button id="moveleft" style="display:none" onclick="moveLeft()">Move Left</button>
+              <button id="moveright" style="display:none" onclick="moveRight()">Move Right</button>
+              <button id="rotateright" style="display:none" onclick="rotateRight()">Rotate Right</button>
+              <button id="dropfast" style="display:none" onclick="dropFast()">Drop Fast</button>
+           <!-- Destop browsers section end !-->
+
+           <span id="scorearea" sytle="align: right">
+              <span id="scoretext" onclick="activateDesktop()">Score:</span>
+              <span id="score">0</span>
+           </span>
+        </div>
+        <div id="debug"></div>
+        <div id="warn"></div>
+        <div id="error"></div>
+        <div id="gamearea" style="position: relative;">
+           <canvas id="grid" style="position: absolute; left: 0; top: 0; z-index: 0;"></canvas>
+           <canvas id="credits" style="position: absolute; left: 0; top: 0; z-index: 1;"></canvas>
+           <canvas id="foreground" style="position: absolute; left: 0; top: 0; z-index: 2;"></canvas>
+           <canvas id="message" style="position: absolute; left: 0; top: 0; z-index: 3;"></canvas>
+        </div>
+     </div>
+     <audio id="tick" preload="auto" autobuffer>
+        <source src="sound/tick.ogg" type="audio/ogg" />
+        <source src="sound/tick.mp3" type="audio/mpeg" />
+        <source src="sound/tick.wav" type="audio/wav" />
+        <source src="sound/tick.aac" type="audio/mp4" />
+        Browser does not support the audio element.
+     </audio>
+     <audio id="swoosh" muted="true" preload="auto" autobuffer>
+        <source src="sound/swoosh.ogg" type="audio/ogg" />
+        <source src="sound/swoosh.mp3" type="audio/mpeg" />
+        <source src="sound/swoosh.wav" type="audio/wav" />
+        <source src="sound/swoosh.aac" type="audio/mp4" />
+        Browser does not support the audio element.
+     </audio>
+     <script src="js/log.js"></script>
+
+     <!-- This section used only for desktop browsers !-->
+     <script>
+         function activateDesktop() {
+            if (gameStatus == GAME_ENDED) {
+               if (playerName.length > 0) {
+                  window.location.href = "main.html?name=" + playerName;
+               } else {
+                  window.location.href = "main.html";
+               }
+               return;
+            }
+            if (gameStatus == GAME_HELPSCREEN) {
+               initializeGame();
+               document.getElementById("rotateleft").style.display = "inline"; 
+               document.getElementById("moveleft").style.display = "inline"; 
+               document.getElementById("moveright").style.display = "inline"; 
+               document.getElementById("rotateright").style.display = "inline"; 
+               document.getElementById("dropfast").style.display = "inline"; 
+               startNewGame();
+            }
+         }
+         function rotateLeft() { actions.push("rotateleft"); }
+         function rotateRight() { actions.push("rotateright"); }
+         function moveLeft() { actions.push("moveleft"); }
+         function moveRight() { actions.push("moveright"); }
+         function dropFast() { actions.push("dropfast"); }
+     </script>
+     <!-- Desktop browsers section end !-->
+
+     <script>
+         function orientationChange(mediaquery) {
+             if ((canvas.orientation.indexOf("landscape") >= 0) &&
+                 (mediaquery.matches)) {
+                warnoutput("Resume game... landscape");
+                tetrisGameResume();
+             } else if ((canvas.orientation.indexOf("portrait") >= 0) &&
+                        !(mediaquery.matches)) {
+                warnoutput("Resume game... portrait");
+                tetrisGameResume();
+             } else if (mediaquery.matches) {
+                warnoutput("Pause game... landscape");
+                tetrisGamePause();
+             } else {
+                warnoutput("Pause game... portrait");
+                tetrisGamePause();
+             }
+         } 
+         var timeFromStartOfGame = 0;
+         var startTime;
+         var oldGameStatus;
+         var playerName = "";
+         if (location.href.indexOf("name=") > 0) {
+            playerName = location.href.substring(location.href.indexOf("name=") + 5);
+         }
+
+         function storeTimeDiff() {
+             var timenow = new Date().getTime();
+             var timediffInSeconds = ( timenow - startTime ) / 1000;
+             timeFromStartOfGame += timediffInSeconds;
+         }
+         function tetrisGamePause() {
+            if (gameStatus == GAME_PAUSED ||
+                gameStatus == GAME_HELPSCREEN ||
+                gameStatus == GAME_ENDED) return;
+            
+            textbackgroundContext.clearRect(0,0,canvas.width,canvas.height);
+            if (gameStatus == GAME_INPROGRESS) {
+               cancelAllAnimations();
+               clearAllActions();
+               stopPlayingSounds();
+               storeTimeDiff();
+            } 
+            if (gameStatus != GAME_ENDED) {
+               messageContext.font = "50px Georgia";
+               var gradient=messageContext.createLinearGradient(0,0,50,100);
+               gradient.addColorStop(0,"red");
+               gradient.addColorStop(0.25,"white");
+               gradient.addColorStop(0.5,"black");
+               gradient.addColorStop(0.75,"magenta");
+               gradient.addColorStop(1.0,"blue");
+               messageContext.fillStyle = gradient;
+               messageContext.fillText("GAME PAUSED", 50, 100);
+               oldGameStatus = gameStatus;
+               gameStatus = GAME_PAUSED;
+            }
+         }
+         function tetrisGameResume() {
+            if (gameStatus != GAME_PAUSED) return;
+            if (oldGameStatus == GAME_ENDED) return;
+            messageContext.clearRect(0,0,canvas.width,canvas.height);
+            drawTextBackground();
+            clearAllActions();
+            if (oldGameStatus != GAME_NOTSTARTED) {
+               playSound('tick', true);
+               playSound('swoosh', false);
+            }
+            if (oldGameStatus == GAME_INPROGRESS) {
+               var startTime = new Date().getTime();
+               debugoutput("game resume");
+               animate();
+            }
+            gameStatus = oldGameStatus;
+         }
+         
+         //function newGameAction(e) {
+         //   if (!e) {
+         //      e = window.event;
+         //   }
+         //   startTime = new Date().getTime();
+         //   startNewGame();
+         //   debugoutput("startNewGame()");
+         //   animate();
+         //}
+         //function abortAction(e) {
+         //   if (!e) {
+         //      e = window.event;
+         //   }
+         //   debugoutput("abort");
+         //   cancelAllAnimations();
+         //   stopPlayingSounds();
+         //   window.location.href = "main.html";
+         //}
+         function showHelpScreen() {
+            messageContext.font = "30px Georgia";
+            var gradient=messageContext.createLinearGradient(0,0,50,100);
+            gradient.addColorStop(0,"red");
+            gradient.addColorStop(0.25,"white");
+            gradient.addColorStop(0.5,"black");
+            gradient.addColorStop(0.75,"magenta");
+            gradient.addColorStop(1.0,"blue");
+            messageContext.fillStyle = gradient;
+            if (playerName.length > 0) {
+               messageContext.fillText("Hello, " + playerName, 50, 40);
+            }
+            messageContext.fillText("WELCOME TO TETRIS", 50, 80);
+            messageContext.font = "20px Georgia";
+            messageContext.fillText("How To Play", 50, 120);
+            messageContext.fillText("Swipe Left  - Move Left", 50, 150);
+            messageContext.fillText("Swipe Right - Move Right", 50, 180);
+            messageContext.fillText("Swipe Down  - Drop Fast", 50, 210);
+            messageContext.fillText("Swipe Up    - Rotate Right", 50, 240);
+            messageContext.fillText("Tap         - Rotate Left", 50, 270);
+            messageContext.fillText("<<<Tap Screen to Start Game>>>", 50, 300);
+         }
+      </script>
+      <script src="js/colors.js"></script>
+      <script src="js/canvas.js"></script>
+      <script src="js/shapes.js"></script>
+      <script src="js/visibleShapes.js"></script>
+      <script src="js/landing.js"></script>
+      <script src="js/score.js"></script>
+      <script src="js/storage.js"></script>
+      <script src="js/socket.js"></script>
+      <script src="js/sound.js"></script>
+      <script src="js/moves.js"></script>
+      <script src="js/animation.js"></script>
+      <script src="js/events.js"></script>
+      <script src="js/main.js"></script>
+      <script>
+         //var newgame = document.getElementById("newgame");
+         //var mainscreen = document.getElementById("abort");
+         //newgame.addEventListener('onclick', newGameAction, false);
+         //mainscreen.addEventListener('touchend', abortAction, false);
+
+         getHighScoreValues();
+         initializeHelpScreen();
+
+         var mediaquery;
+      </script>
+  </body>
+</html>
+
